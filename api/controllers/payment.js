@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const TransactionsModel = require('../models/transactions');
+const ItemsModel = require('../models/items');
+
 const ResponseHandler = require('../services/success-error-handling')
 
 const validatePayload = ({ items }) => {
@@ -9,7 +11,7 @@ const validatePayload = ({ items }) => {
 const computeChange = (cleanBody, totalPrice) => {
 
   try {
-    let total = cleanBody.cash - totalPrice;
+    let total = parseFloat(cleanBody.cash).toFixed(2) - totalPrice;
 
     if(total < 0){
       throw {
@@ -26,26 +28,37 @@ const computeChange = (cleanBody, totalPrice) => {
 }
 
 process_payment = async (req, res) => {
+  // for multiple items
+  // const cleanBody = {
+  //   cash: req.body.cash,
+  //   items: req.body.items
+  // };
+
+  console.log(req.body, "req body")
+
   const cleanBody = {
     cash: req.body.cash,
-    items: req.body.items
+    item: req.body.item
   };
 
   try {
 
-    const totalPrice = validatePayload(cleanBody);
-
-    let result = computeChange(cleanBody, totalPrice);
+    //const totalPrice = validatePayload(cleanBody);
+    let result = computeChange(cleanBody, cleanBody.item.price);
 
     const generateTransactionHistory = {
       _id: new mongoose.Types.ObjectId(),
-      items: cleanBody.items,
-      total: `$${totalPrice}`
+      item: cleanBody.item,
+      customerCash: `$${cleanBody.cash}`,
+      change: `$${result}`,
+      total: `$${cleanBody.item.price}`
     };
 
     let processHistory = new TransactionsModel(generateTransactionHistory);
 
     await processHistory.save();
+
+    await ItemsModel.findOneAndUpdate({ _id: cleanBody.item._id }, { $set: { stocks: cleanBody.item.stocks - 1} })
 
     res.status(201).json({
       status: "success",

@@ -44,7 +44,7 @@ describe("POST /payment/process", () => {
     });
 
     context("computeChange", () => {
-      it("Return total when computation result is not negative", async () => {
+      it("Return change when result is not 0", async () => {
         let total = await paymentService.validatePayload(payload);
         let result = await paymentService.computeChange(payload, total);
 

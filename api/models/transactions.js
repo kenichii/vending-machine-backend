@@ -3,8 +3,10 @@ const mongoose = require('mongoose');
 
 const transactionsSchema = mongoose.Schema({
   _id: mongoose.Schema.Types.ObjectId,
-  items: { type: Array },
-  total: { type: Number },
+  item: { type: Object },
+  total: { type: String },
+  customerCash: { type: String },
+  cash: { type: String },
   date_created: Date
 });
 
